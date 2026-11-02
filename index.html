@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Al Quaraouiyine en 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400&family=Noto+Naskh+Arabic:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: one reading column. Original video (YouTube link) and reconstructed video side by side, then the interactive 3DGS viewer full width. */
+:root {
+  --paper: #f6f8f6;
+  --surface: #ffffff;
+  --ink: #17201d;
+  --muted: #5a6661;
+  --line: #dbe2de;
+  --zellige: #1d6a4e;
+  --cedar: #8a5430;
+  --font-display: "Newsreader", "Noto Naskh Arabic", Georgia, serif;
+  --font-body: "IBM Plex Sans", "Noto Naskh Arabic", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #111614; --surface: #171e1b; --ink: #e5ebe8; --muted: #9ba8a3; --line: #2a3430;
+    --zellige: #63b892; --cedar: #d29466; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #111614; --surface: #171e1b; --ink: #e5ebe8; --muted: #9ba8a3; --line: #2a3430;
+  --zellige: #63b892; --cedar: #d29466; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font: 400 16px/1.6 var(--font-body); }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+header { padding: 44px 0 24px; border-bottom: 1px solid var(--line); }
+.kicker { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--zellige); font-weight: 600; margin: 0 0 10px; }
+h1 { font: 600 clamp(32px, 6vw, 52px)/1.08 var(--font-display); margin: 0 0 14px; text-wrap: balance; }
+h1 .ar { font-family: "Noto Naskh Arabic", serif; font-weight: 600; color: var(--cedar); font-size: .62em; display: block; margin-top: 6px; }
+.lede { max-width: 70ch; color: var(--muted); font-size: 17px; margin: 0; }
+section { padding: 24px 0; }
+section + section { padding-top: 0; }
+h2 { font: 600 26px/1.2 var(--font-display); margin: 0 0 6px; }
+.intro { max-width: 72ch; color: var(--muted); margin: 0 0 18px; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.media { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+.media video, .media img { width: 100%; height: auto; display: block; background: #000; aspect-ratio: 16 / 9; object-fit: cover; }
+.label { font: 600 13px var(--font-body); letter-spacing: .06em; text-transform: uppercase; color: var(--zellige); margin: 12px 14px 0; }
+.caption { font-size: 14px; color: var(--muted); padding: 4px 14px 12px; margin: 0; }
+a.yt { position: relative; display: block; }
+a.yt .play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+a.yt .play span { background: rgba(0,0,0,.72); color: #fff; font: 500 15px var(--font-body); padding: 10px 18px; border-radius: 999px; }
+a.yt:hover .play span, a.yt:focus-visible .play span { background: var(--zellige); }
+a { color: var(--zellige); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--cedar); outline-offset: 2px; }
+.mono { font-family: var(--font-mono); font-size: 13px; }
+
+/* viewer */
+.viewer { position: relative; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); height: min(72vh, 680px); min-height: 360px; touch-action: none; }
+.viewer canvas { width: 100%; height: 100%; display: block; cursor: grab; }
+.viewer canvas:active { cursor: grabbing; }
+.hud { position: absolute; left: 12px; top: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 8px; pointer-events: none; }
+.hud button { pointer-events: auto; font: 500 14px var(--font-body); color: #fff; background: rgba(20,28,25,.78); border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.hud button[aria-pressed="true"] { background: #1d6a4e; border-color: #1d6a4e; }
+.status { position: absolute; left: 12px; bottom: 12px; font: 400 13px var(--font-body); color: #d8e2dd; background: rgba(20,28,25,.72); padding: 4px 10px; border-radius: 6px; pointer-events: none; }
+.help { font-size: 14px; color: var(--muted); margin: 12px 0 0; max-width: 80ch; }
+kbd { font: 12px var(--font-mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--surface); }
+footer { padding: 26px 0 44px; font-size: 13px; color: var(--muted); }
+footer p { max-width: 80ch; margin: 0 0 6px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Al Quaraouiyine en 3D<span class="ar" lang="ar" dir="rtl">جامع القرويين، فاس</span></h1>
+  </div>
+</header>
+
+<main>
+<section id="videos">
+  <div class="wrap">
+    <div class="two">
+      <div class="media">
+        <a class="yt" id="yt" href="https://www.youtube.com/watch?v=dIgoS4OYrYg" target="_blank" rel="noopener">
+          <img src="media/thumb_dIgoS4OYrYg.jpg" alt="Image de la vidéo 360° de nuit de la cour">
+          <span class="play"><span>▶ Lire la vidéo</span></span>
+        </a>
+        <script>
+        // Click-to-load YouTube player (privacy-enhanced domain). Where external iframes are blocked
+        // (claude.ai artifact pages), the link simply opens the video on YouTube.
+        (() => {
+          const a = document.getElementById("yt");
+          const embeddable = location.protocol.startsWith("http") && !/claude|anthropic/.test(location.hostname);
+          if (!embeddable) { a.querySelector(".play span").textContent = "▶ Voir sur YouTube"; return; }
+          a.addEventListener("click", e => {
+            e.preventDefault();
+            const f = document.createElement("iframe");
+            f.src = "https://www.youtube-nocookie.com/embed/dIgoS4OYrYg?autoplay=1&rel=0";
+            f.title = "Vidéo d'origine sur YouTube (dIgoS4OYrYg)";
+            f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen; gyroscope; accelerometer";
+            f.allowFullscreen = true;
+            f.style.cssText = "width:100%;aspect-ratio:16/9;border:0;display:block;background:#000";
+            a.replaceWith(f);
+          });
+        })();
+        </script>
+        <p class="label">Vidéo d'origine</p>
+        <p class="caption">Vidéo 360° de nuit, chaîne bokbah, 2021 · <span class="mono">dIgoS4OYrYg</span></p>
+      </div>
+      <div class="media">
+        <video src="media/nuit360_reconstruite.mp4" poster="media/nuit360_reconstruite_poster.jpg" controls muted loop playsinline preload="metadata"></video>
+        <p class="label">Notre reconstruction (vidéo)</p>
+        <p class="caption">Rendu du modèle 3DGS le long du trajet de la vidéo</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="modele">
+  <div class="wrap">
+    <p class="label" style="margin:0 0 10px">Modèle 3DGS interactif</p>
+    <div class="viewer" id="viewer">
+      <canvas id="gl" aria-label="Vue 3D interactive de la cour de nuit"></canvas>
+      <div class="hud">
+        <button type="button" id="b-tour" aria-pressed="false">▶ Visite guidée</button>
+        <button type="button" id="b-reset">Point de départ</button>
+      </div>
+      <div class="status" id="status" role="status">Chargement…</div>
+    </div>
+    <p class="help">Glisser pour regarder · molette ou <kbd>↑</kbd><kbd>↓</kbd> pour avancer · <kbd>←</kbd><kbd>→</kbd> pour se décaler · deux doigts sur écran tactile.</p>
+  </div>
+</section>
+</main>
+
+<script>
+(() => {
+"use strict";
+const canvas = document.getElementById("gl");
+const statusEl = document.getElementById("status");
+const setStatus = t => { statusEl.textContent = t; statusEl.hidden = !t; };
+const gl = canvas.getContext("webgl2", { antialias: false, premultipliedAlpha: true, alpha: true });
+if (!gl) { setStatus("WebGL2 n'est pas disponible dans ce navigateur."); return; }
+
+// ---------- worker: builds the data texture and sorts splats front to back ----------
+const workerSrc = `
+let n = 0, pos = null, lastView = null, building = false;
+const fbuf = new Float32Array(1), ibuf = new Int32Array(fbuf.buffer);
+function half(x) {
+  fbuf[0] = x; const f = ibuf[0];
+  const sign = (f >> 31) & 1, exp = (f >> 23) & 0xff; let frac = f & 0x7fffff, e;
+  if (exp === 0) e = 0;
+  else if (exp < 113) { e = 0; frac |= 0x800000; frac = frac >> (113 - exp); if (frac & 0x1000000) { e = 1; frac = 0; } }
+  else if (exp < 142) e = exp - 112;
+  else { e = 31; frac = 0; }
+  return (sign << 15) | (e << 10) | (frac >> 13);
+}
+const pack = (a, b) => (half(a) | (half(b) << 16)) >>> 0;
+function build(buffer, count) {
+  const f = new Float32Array(buffer), u8 = new Uint8Array(buffer), u32 = new Uint32Array(buffer);
+  const texW = 2048, texH = Math.max(1, Math.ceil((2 * count) / texW));
+  const tex = new Uint32Array(texW * texH * 4), texf = new Float32Array(tex.buffer);
+  pos = new Float32Array(3 * count);
+  for (let i = 0; i < count; i++) {
+    const x = f[8 * i], y = f[8 * i + 1], z = f[8 * i + 2];
+    texf[8 * i] = x; texf[8 * i + 1] = y; texf[8 * i + 2] = z;
+    pos[3 * i] = x; pos[3 * i + 1] = y; pos[3 * i + 2] = z;
+    const s0 = f[8 * i + 3], s1 = f[8 * i + 4], s2 = f[8 * i + 5];
+    let w = (u8[32 * i + 28] - 128) / 128, qx = (u8[32 * i + 29] - 128) / 128,
+        qy = (u8[32 * i + 30] - 128) / 128, qz = (u8[32 * i + 31] - 128) / 128;
+    const ql = Math.hypot(w, qx, qy, qz) || 1; w /= ql; qx /= ql; qy /= ql; qz /= ql;
+    const R = [1 - 2 * (qy * qy + qz * qz), 2 * (qx * qy - w * qz), 2 * (qx * qz + w * qy),
+               2 * (qx * qy + w * qz), 1 - 2 * (qx * qx + qz * qz), 2 * (qy * qz - w * qx),
+               2 * (qx * qz - w * qy), 2 * (qy * qz + w * qx), 1 - 2 * (qx * qx + qy * qy)];
+    const M = [R[0] * s0, R[1] * s1, R[2] * s2, R[3] * s0, R[4] * s1, R[5] * s2, R[6] * s0, R[7] * s1, R[8] * s2];
+    const S00 = M[0] * M[0] + M[1] * M[1] + M[2] * M[2], S01 = M[0] * M[3] + M[1] * M[4] + M[2] * M[5],
+          S02 = M[0] * M[6] + M[1] * M[7] + M[2] * M[8], S11 = M[3] * M[3] + M[4] * M[4] + M[5] * M[5],
+          S12 = M[3] * M[6] + M[4] * M[7] + M[5] * M[8], S22 = M[6] * M[6] + M[7] * M[7] + M[8] * M[8];
+    tex[8 * i + 4] = pack(4 * S00, 4 * S01);
+    tex[8 * i + 5] = pack(4 * S02, 4 * S11);
+    tex[8 * i + 6] = pack(4 * S12, 4 * S22);
+    tex[8 * i + 7] = u32[8 * i + 6];
+  }
+  n = count;
+  postMessage({ tex, texW, texH, n }, [tex.buffer]);
+}
+function sort(v) {
+  if (!pos) return;
+  const depth = new Float32Array(n);
+  let lo = Infinity, hi = -Infinity, k = 0;
+  const idx = new Uint32Array(n);
+  for (let i = 0; i < n; i++) {
+    const d = v[2] * pos[3 * i] + v[6] * pos[3 * i + 1] + v[10] * pos[3 * i + 2] + v[14];
+    if (d > 0.05) { idx[k] = i; depth[k++] = d; if (d < lo) lo = d; if (d > hi) hi = d; }
+  }
+  const B = 65536, counts = new Uint32Array(B), key = new Uint16Array(k);
+  const sc = (B - 1) / Math.max(hi - lo, 1e-6);
+  for (let j = 0; j < k; j++) { const b = Math.min(B - 1, ((depth[j] - lo) * sc) | 0); key[j] = b; counts[b]++; }
+  let acc = 0; for (let b = 0; b < B; b++) { const c = counts[b]; counts[b] = acc; acc += c; }
+  const out = new Uint32Array(Math.max(k, 1));
+  for (let j = 0; j < k; j++) out[counts[key[j]]++] = idx[j];
+  postMessage({ order: out, count: k }, [out.buffer]);
+}
+onmessage = e => {
+  if (e.data.buffer) { build(e.data.buffer, e.data.count); if (lastView) sort(lastView); }
+  else if (e.data.view) { lastView = e.data.view; sort(lastView); }
+};`;
+const worker = new Worker(URL.createObjectURL(new Blob([workerSrc], { type: "text/javascript" })));
+
+// ---------- shaders ----------
+const vs = `#version 300 es
+precision highp float; precision highp int;
+uniform highp usampler2D u_tex;
+uniform mat4 view; uniform vec2 focal; uniform vec2 viewport;
+in vec2 position; in uint index;
+out vec4 vColor; out vec2 vPosition;
+void main() {
+  ivec2 c0 = ivec2(int((index & 1023u) << 1), int(index >> 10));
+  uvec4 t0 = texelFetch(u_tex, c0, 0);
+  vec4 cam = view * vec4(uintBitsToFloat(t0.xyz), 1.0);
+  if (cam.z < 0.05) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
+  vec2 ndc = vec2(focal.x * cam.x / cam.z, -focal.y * cam.y / cam.z) * 2.0 / viewport;
+  if (any(greaterThan(abs(ndc), vec2(1.3)))) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
+  uvec4 t1 = texelFetch(u_tex, c0 + ivec2(1, 0), 0);
+  vec2 a = unpackHalf2x16(t1.x), b = unpackHalf2x16(t1.y), d = unpackHalf2x16(t1.z);
+  mat3 Vrk = 0.25 * mat3(a.x, a.y, b.x, a.y, b.y, d.x, b.x, d.x, d.y);
+  float z2 = cam.z * cam.z;
+  mat3 J = mat3(focal.x / cam.z, 0.0, 0.0, 0.0, focal.y / cam.z, 0.0,
+                -focal.x * cam.x / z2, -focal.y * cam.y / z2, 0.0);
+  mat3 T = J * mat3(view);
+  mat3 cov = T * Vrk * transpose(T);
+  float A = cov[0][0] + 0.3, B = cov[0][1], C = cov[1][1] + 0.3;
+  float mid = 0.5 * (A + C), rad = length(vec2(0.5 * (A - C), B));
+  float l1 = mid + rad, l2 = max(mid - rad, 0.1);
+  vec2 dir = abs(B) > 1e-7 ? normalize(vec2(B, l1 - A)) : (A >= C ? vec2(1.0, 0.0) : vec2(0.0, 1.0));
+  vec2 major = min(sqrt(2.0 * l1), 1024.0) * dir;
+  vec2 minor = min(sqrt(2.0 * l2), 1024.0) * vec2(dir.y, -dir.x);
+  uint c = t1.w;
+  vColor = vec4(float(c & 255u), float((c >> 8) & 255u), float((c >> 16) & 255u), float(c >> 24)) / 255.0;
+  vPosition = position;
+  vec2 off = position.x * major + position.y * minor;
+  gl_Position = vec4(ndc + vec2(off.x, -off.y) * 2.0 / viewport, 0.0, 1.0);
+}`;
+const fs = `#version 300 es
+precision highp float;
+in vec4 vColor; in vec2 vPosition; out vec4 fragColor;
+void main() {
+  float A = -dot(vPosition, vPosition);
+  if (A < -4.0) discard;
+  float B = exp(A) * vColor.a;
+  fragColor = vec4(B * vColor.rgb, B);
+}`;
+function compile(type, src) {
+  const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
+gl.linkProgram(prog);
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { setStatus("Erreur WebGL : " + gl.getProgramInfoLog(prog)); return; }
+gl.useProgram(prog);
+gl.disable(gl.DEPTH_TEST);
+gl.enable(gl.BLEND);
+gl.blendFuncSeparate(gl.ONE_MINUS_DST_ALPHA, gl.ONE, gl.ONE_MINUS_DST_ALPHA, gl.ONE);
+gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD);
+const uView = gl.getUniformLocation(prog, "view"), uFocal = gl.getUniformLocation(prog, "focal"),
+      uViewport = gl.getUniformLocation(prog, "viewport");
+const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+const quad = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-2, -2, 2, -2, 2, 2, -2, 2]), gl.STATIC_DRAW);
+const aPos = gl.getAttribLocation(prog, "position");
+gl.enableVertexAttribArray(aPos); gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+const orderBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, orderBuf);
+const aIdx = gl.getAttribLocation(prog, "index");
+gl.enableVertexAttribArray(aIdx); gl.vertexAttribIPointer(aIdx, 1, gl.UNSIGNED_INT, 0, 0); gl.vertexAttribDivisor(aIdx, 1);
+const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.uniform1i(gl.getUniformLocation(prog, "u_tex"), 0);
+
+let drawCount = 0, sorting = false, sortDirty = true, texReady = false;
+worker.onmessage = e => {
+  if (e.data.tex) {
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32UI, e.data.texW, e.data.texH, 0, gl.RGBA_INTEGER, gl.UNSIGNED_INT, e.data.tex);
+    texReady = true;
+  } else if (e.data.order) {
+    gl.bindBuffer(gl.ARRAY_BUFFER, orderBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, e.data.order, gl.DYNAMIC_DRAW);
+    drawCount = e.data.count; sorting = false;
+  }
+};
+
+// ---------- camera (OpenCV convention: x right, y down, z forward) ----------
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const mul = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const norm = a => mul(a, 1 / (Math.hypot(...a) || 1));
+let up = [0, -1, 0], f0 = [0, 0, 1], r0 = [1, 0, 0], start = [0, 0, 0], startYaw = 0, path = [], speed = 1;
+let P = [0, 0, 0], yaw = 0, pitch = 0, tour = null;
+const FOV = 70 * Math.PI / 180;
+function horizontalDir(d) { return norm(sub(d, mul(up, dot(d, up)))); }
+function setFromForward(d) { d = norm(d); yaw = Math.atan2(dot(d, r0), dot(d, f0)); pitch = Math.asin(Math.max(-1, Math.min(1, dot(d, up)))); }
+function forward() {
+  const h = add(mul(f0, Math.cos(yaw)), mul(r0, Math.sin(yaw)));
+  return add(mul(h, Math.cos(pitch)), mul(up, Math.sin(pitch)));
+}
+function viewMatrix() {
+  const fw = forward(), down = mul(up, -1);
+  const right = norm(cross(down, fw)), dn = cross(fw, right);
+  const t = [-dot(right, P), -dot(dn, P), -dot(fw, P)];
+  return new Float32Array([right[0], dn[0], fw[0], 0, right[1], dn[1], fw[1], 0, right[2], dn[2], fw[2], 0, t[0], t[1], t[2], 1]);
+}
+function resetCamera() { tour = null; tourBtn.setAttribute("aria-pressed", "false"); P = start.slice(); yaw = startYaw; pitch = 0; sortDirty = true; }
+
+// ---------- input ----------
+const keys = new Set();
+const typing = () => /INPUT|TEXTAREA/.test(document.activeElement && document.activeElement.tagName);
+const viewerEl = document.getElementById("viewer");
+let hover = false;
+viewerEl.addEventListener("pointerenter", () => hover = true);
+viewerEl.addEventListener("pointerleave", () => hover = false);
+const MOVE_KEYS = ["KeyW", "KeyS", "KeyA", "KeyD", "KeyR", "KeyF", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+window.addEventListener("keydown", e => {
+  if (typing() || !MOVE_KEYS.includes(e.code)) return;
+  if (!hover && document.activeElement !== canvas) return;
+  keys.add(e.code); stopTour(); e.preventDefault();
+});
+window.addEventListener("keyup", e => keys.delete(e.code));
+window.addEventListener("blur", () => keys.clear());
+canvas.tabIndex = 0;
+const pointers = new Map(); let pinch = 0;
+canvas.addEventListener("pointerdown", e => { canvas.setPointerCapture(e.pointerId); pointers.set(e.pointerId, [e.clientX, e.clientY]); stopTour(); canvas.focus({ preventScroll: true }); });
+canvas.addEventListener("pointermove", e => {
+  if (!pointers.has(e.pointerId)) return;
+  const [x0, y0] = pointers.get(e.pointerId);
+  pointers.set(e.pointerId, [e.clientX, e.clientY]);
+  if (pointers.size === 1) {
+    yaw += (e.clientX - x0) * 0.004; pitch = Math.max(-1.45, Math.min(1.45, pitch + (e.clientY - y0) * 0.004));
+  } else if (pointers.size === 2) {
+    const [a, b] = [...pointers.values()];
+    const dnow = Math.hypot(a[0] - b[0], a[1] - b[1]);
+    if (pinch) P = add(P, mul(forward(), (dnow - pinch) * 0.01 * speed));
+    pinch = dnow;
+  }
+  sortDirty = true;
+});
+const endPointer = e => { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = 0; };
+canvas.addEventListener("pointerup", endPointer); canvas.addEventListener("pointercancel", endPointer);
+canvas.addEventListener("wheel", e => { e.preventDefault(); stopTour(); P = add(P, mul(forward(), -e.deltaY * 0.0015 * speed)); sortDirty = true; }, { passive: false });
+
+const tourBtn = document.getElementById("b-tour");
+function stopTour() { if (tour) { tour = null; tourBtn.setAttribute("aria-pressed", "false"); tourBtn.textContent = "▶ Visite guidée"; } }
+tourBtn.addEventListener("click", () => {
+  if (tour) { stopTour(); return; }
+  if (path.length < 2) return;
+  tour = { s: 0 }; P = path[0].slice(); setFromForward(sub(path[1], path[0])); pitch = 0;
+  tourBtn.setAttribute("aria-pressed", "true"); tourBtn.textContent = "❚❚ Arrêter la visite";
+});
+document.getElementById("b-reset").addEventListener("click", resetCamera);
+function pathPoint(s) {
+  const i = Math.max(0, Math.min(path.length - 2, Math.floor(s))), u = Math.min(1, s - i);
+  return add(mul(path[i], 1 - u), mul(path[i + 1], u));
+}
+
+// ---------- loop ----------
+let lastT = performance.now(), lastSent = null;
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  const w = Math.round(canvas.clientWidth * dpr), h = Math.round(canvas.clientHeight * dpr);
+  if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+}
+function frame(t) {
+  const dt = Math.min(0.1, (t - lastT) / 1000); lastT = t;
+  if (keys.size) {
+    const fw = forward(), right = norm(cross(mul(up, -1), fw));
+    let m = [0, 0, 0];
+    if (keys.has("KeyW") || keys.has("ArrowUp")) m = add(m, fw);
+    if (keys.has("KeyS") || keys.has("ArrowDown")) m = sub(m, fw);
+    if (keys.has("KeyD") || keys.has("ArrowRight")) m = add(m, right);
+    if (keys.has("KeyA") || keys.has("ArrowLeft")) m = sub(m, right);
+    if (keys.has("KeyR")) m = add(m, up);
+    if (keys.has("KeyF")) m = sub(m, up);
+    P = add(P, mul(m, speed * dt)); sortDirty = true;
+  }
+  if (tour) {
+    tour.s += dt * 0.35;
+    if (tour.s >= path.length - 1) { stopTour(); }
+    else {
+      P = pathPoint(tour.s);
+      const want = horizontalDir(sub(pathPoint(Math.min(path.length - 1, tour.s + 1.2)), P));
+      const cur = forward(); const blend = norm(add(mul(cur, 1 - Math.min(1, dt * 2)), mul(want, Math.min(1, dt * 2))));
+      setFromForward(blend); sortDirty = true;
+    }
+  }
+  resize();
+  const view = viewMatrix();
+  if (texReady && sortDirty && !sorting) { sorting = true; sortDirty = false; worker.postMessage({ view }); }
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+  if (texReady && drawCount > 0) {
+    const fy = canvas.height / (2 * Math.tan(FOV / 2));
+    gl.uniformMatrix4fv(uView, false, view);
+    gl.uniform2f(uFocal, fy, fy);
+    gl.uniform2f(uViewport, canvas.width, canvas.height);
+    gl.bindVertexArray(vao);
+    gl.drawArraysInstanced(gl.TRIANGLE_FAN, 0, 4, drawCount);
+  }
+  requestAnimationFrame(frame);
+}
+
+// ---------- loading ----------
+async function load() {
+  const meta = await (await fetch("splat/night360.json")).json();
+  up = norm(meta.up); start = meta.start; path = meta.path || [];
+  f0 = horizontalDir(sub(meta.look, meta.start)); r0 = norm(cross(mul(up, -1), f0));
+  if (path.length > 1) {
+    let lo = [...path[0]], hi = [...path[0]];
+    path.forEach(p => p.forEach((v, i) => { lo[i] = Math.min(lo[i], v); hi[i] = Math.max(hi[i], v); }));
+    speed = Math.max(0.3, Math.hypot(...sub(hi, lo)) / 8);
+  }
+  startYaw = 0; resetCamera();
+  requestAnimationFrame(frame);
+  const parts = [];
+  let total = 0;
+  for (let k = 0; k < meta.files.length; k++) {
+    setStatus(`Chargement du modèle… ${k + 1}/${meta.files.length}`);
+    const r = await fetch("splat/" + meta.files[k]);
+    if (!r.ok) throw new Error(r.status + " " + meta.files[k]);
+    const b = new Uint8Array(await r.arrayBuffer());
+    parts.push(b); total += b.length;
+    const all = new Uint8Array(total); let o = 0;
+    parts.forEach(p => { all.set(p, o); o += p.length; });
+    worker.postMessage({ buffer: all.buffer, count: Math.floor(total / 32) }, [all.buffer]);
+    sortDirty = true;
+  }
+  setStatus("");
+}
+if (location.protocol === "file:") {
+  setStatus("Le modèle ne peut pas se charger depuis un fichier local : ouvrir la page via un serveur web (par ex. python3 -m http.server dans le dossier site, puis http://localhost:8000).");
+} else {
+  load().catch(err => setStatus("Impossible de charger le modèle : " + err.message));
+}
+})();
+</script>
+</body>
+</html>
