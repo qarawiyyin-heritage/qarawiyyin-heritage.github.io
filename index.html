@@ -133,6 +133,14 @@ footer p { max-width: 80ch; margin: 0 0 6px; }
     <p class="help">Glisser pour regarder · molette ou <kbd>↑</kbd><kbd>↓</kbd> pour avancer · <kbd>←</kbd><kbd>→</kbd> pour se décaler · deux doigts sur écran tactile.</p>
   </div>
 </section>
+<section id="chaine">
+  <div class="wrap">
+    <p class="label" style="margin:0 0 10px">Chaîne de traitement</p>
+    <div class="media" style="background:#fff;padding:10px">
+      <img src="media/pipeline_360.svg" alt="Schéma de la chaîne de reconstruction : extraction de 201 panoramas, masques, poses COLMAP équirectangulaires, découpe en 12 vues perspective, masques par vue, 3D Gaussian Splatting, puis évaluation, vidéo reconstruite et viewer web" style="width:100%;height:auto;aspect-ratio:auto;object-fit:contain;background:#fff">
+    </div>
+  </div>
+</section>
 </main>
 
 <script>
