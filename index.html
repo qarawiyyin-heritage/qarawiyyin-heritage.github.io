@@ -324,7 +324,7 @@ const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 const norm = a => mul(a, 1 / (Math.hypot(...a) || 1));
 let up = [0, -1, 0], f0 = [0, 0, 1], r0 = [1, 0, 0], start = [0, 0, 0], startYaw = 0, path = [], speed = 1;
-let P = [0, 0, 0], yaw = 0, pitch = 0, tour = null;
+let P = [0, 0, 0], yaw = 0, pitch = 0, tour = null, tourS = 0;  // tourS: position kept across pauses
 const FOV = 70 * Math.PI / 180;
 function horizontalDir(d) { return norm(sub(d, mul(up, dot(d, up)))); }
 function setFromForward(d) { d = norm(d); yaw = Math.atan2(dot(d, r0), dot(d, f0)); pitch = Math.asin(Math.max(-1, Math.min(1, dot(d, up)))); }
@@ -338,7 +338,7 @@ function viewMatrix() {
   const t = [-dot(right, P), -dot(dn, P), -dot(fw, P)];
   return new Float32Array([right[0], dn[0], fw[0], 0, right[1], dn[1], fw[1], 0, right[2], dn[2], fw[2], 0, t[0], t[1], t[2], 1]);
 }
-function resetCamera() { tour = null; tourBtn.setAttribute("aria-pressed", "false"); P = start.slice(); yaw = startYaw; pitch = 0; sortDirty = true; }
+function resetCamera() { tour = null; tourS = 0; tourBtn.setAttribute("aria-pressed", "false"); tourBtn.textContent = "▶ Visite guidée"; P = start.slice(); yaw = startYaw; pitch = 0; sortDirty = true; }
 
 // ---------- input ----------
 const keys = new Set();
@@ -377,11 +377,17 @@ canvas.addEventListener("pointerup", endPointer); canvas.addEventListener("point
 canvas.addEventListener("wheel", e => { e.preventDefault(); stopTour(); P = add(P, mul(forward(), -e.deltaY * 0.0015 * speed)); sortDirty = true; }, { passive: false });
 
 const tourBtn = document.getElementById("b-tour");
-function stopTour() { if (tour) { tour = null; tourBtn.setAttribute("aria-pressed", "false"); tourBtn.textContent = "▶ Visite guidée"; } }
+function stopTour(finished) {
+  if (!tour) return;
+  tourS = finished ? 0 : tour.s; tour = null;
+  tourBtn.setAttribute("aria-pressed", "false");
+  tourBtn.textContent = tourS > 0 ? "▶ Reprendre la visite" : "▶ Visite guidée";
+}
 tourBtn.addEventListener("click", () => {
   if (tour) { stopTour(); return; }
   if (path.length < 2) return;
-  tour = { s: 0 }; P = path[0].slice(); setFromForward(sub(path[1], path[0])); pitch = 0;
+  tour = { s: tourS }; P = pathPoint(tourS);
+  setFromForward(sub(pathPoint(Math.min(path.length - 1, tourS + 1.2)), P)); pitch = 0;
   tourBtn.setAttribute("aria-pressed", "true"); tourBtn.textContent = "❚❚ Arrêter la visite";
 });
 document.getElementById("b-reset").addEventListener("click", resetCamera);
@@ -412,7 +418,7 @@ function frame(t) {
   }
   if (tour) {
     tour.s += dt * 0.35;
-    if (tour.s >= path.length - 1) { stopTour(); }
+    if (tour.s >= path.length - 1) { stopTour(true); }
     else {
       P = pathPoint(tour.s);
       const want = horizontalDir(sub(pathPoint(Math.min(path.length - 1, tour.s + 1.2)), P));
