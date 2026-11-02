@@ -1,89 +1,86 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Al Quaraouiyine en 3D</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400&family=Noto+Naskh+Arabic:wght@400;600&display=swap" rel="stylesheet">
-<style>
-/* Layout: one reading column. Original video (YouTube link) and reconstructed video side by side, then the interactive 3DGS viewer full width. */
-:root {
-  --paper: #f6f8f6;
-  --surface: #ffffff;
-  --ink: #17201d;
-  --muted: #5a6661;
-  --line: #dbe2de;
-  --zellige: #1d6a4e;
-  --cedar: #8a5430;
-  --font-display: "Newsreader", "Noto Naskh Arabic", Georgia, serif;
-  --font-body: "IBM Plex Sans", "Noto Naskh Arabic", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
-  color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper: #111614; --surface: #171e1b; --ink: #e5ebe8; --muted: #9ba8a3; --line: #2a3430;
-    --zellige: #63b892; --cedar: #d29466; color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --paper: #111614; --surface: #171e1b; --ink: #e5ebe8; --muted: #9ba8a3; --line: #2a3430;
-  --zellige: #63b892; --cedar: #d29466; color-scheme: dark;
-}
-* { box-sizing: border-box; }
-html, body { margin: 0; }
-body { background: var(--paper); color: var(--ink); font: 400 16px/1.6 var(--font-body); }
-.wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
-header { padding: 44px 0 24px; border-bottom: 1px solid var(--line); }
-.kicker { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--zellige); font-weight: 600; margin: 0 0 10px; }
-h1 { font: 600 clamp(32px, 6vw, 52px)/1.08 var(--font-display); margin: 0 0 14px; text-wrap: balance; }
-h1 .ar { font-family: "Noto Naskh Arabic", serif; font-weight: 600; color: var(--cedar); font-size: .62em; display: block; margin-top: 6px; }
-.lede { max-width: 70ch; color: var(--muted); font-size: 17px; margin: 0; }
-section { padding: 24px 0; }
-section + section { padding-top: 0; }
-h2 { font: 600 26px/1.2 var(--font-display); margin: 0 0 6px; }
-.intro { max-width: 72ch; color: var(--muted); margin: 0 0 18px; }
-.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
-.media { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
-.media video, .media img { width: 100%; height: auto; display: block; background: #000; aspect-ratio: 16 / 9; object-fit: cover; }
-.label { font: 600 13px var(--font-body); letter-spacing: .06em; text-transform: uppercase; color: var(--zellige); margin: 12px 14px 0; }
-.caption { font-size: 14px; color: var(--muted); padding: 4px 14px 12px; margin: 0; }
-a.yt { position: relative; display: block; }
-a.yt .play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-a.yt .play span { background: rgba(0,0,0,.72); color: #fff; font: 500 15px var(--font-body); padding: 10px 18px; border-radius: 999px; }
-a.yt:hover .play span, a.yt:focus-visible .play span { background: var(--zellige); }
-a { color: var(--zellige); }
-a:focus-visible, button:focus-visible { outline: 2px solid var(--cedar); outline-offset: 2px; }
-.mono { font-family: var(--font-mono); font-size: 13px; }
+  <meta charset="utf-8">
+  <meta name="description" content="Reconstruction 3D Gaussian Splatting de la cour de la mosquée Al Quaraouiyine (Fès) à partir d'une vidéo 360° amateur">
+  <meta name="keywords" content="Al Quaraouiyine, Qarawiyyin, Fès, patrimoine, 3D Gaussian Splatting, vidéo 360°, COLMAP">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Al Quaraouiyine en 3D</title>
 
-/* viewer */
-.viewer { position: relative; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); height: min(72vh, 680px); min-height: 360px; touch-action: none; }
-.viewer canvas { width: 100%; height: 100%; display: block; cursor: grab; }
-.viewer canvas:active { cursor: grabbing; }
-.hud { position: absolute; left: 12px; top: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 8px; pointer-events: none; }
-.hud button { pointer-events: auto; font: 500 14px var(--font-body); color: #fff; background: rgba(20,28,25,.78); border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
-.hud button[aria-pressed="true"] { background: #1d6a4e; border-color: #1d6a4e; }
-.status { position: absolute; left: 12px; bottom: 12px; font: 400 13px var(--font-body); color: #d8e2dd; background: rgba(20,28,25,.72); padding: 4px 10px; border-radius: 6px; pointer-events: none; }
-.help { font-size: 14px; color: var(--muted); margin: 12px 0 0; max-width: 80ch; }
-kbd { font: 12px var(--font-mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--surface); }
-footer { padding: 26px 0 44px; font-size: 13px; color: var(--muted); }
-footer p { max-width: 80ch; margin: 0 0 6px; }
-</style>
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro|Noto+Naskh+Arabic:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    body { font-family: 'Noto Sans', sans-serif; }
+    .hero-body { padding-bottom: 1rem; }
+    .publication-title { font-family: 'Google Sans', sans-serif; }
+    .publication-title .ar { font-family: 'Noto Naskh Arabic', serif; display: block; font-size: .55em; color: #8a5430; margin-top: .4em; }
+    .publication-authors { font-family: 'Google Sans', sans-serif; }
+    .publication-links .button { margin: 4px; }
+    .scene-video, .yt-frame { width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); background: #000; display: block; aspect-ratio: 16 / 9; object-fit: cover; }
+    .media-title { font-size: 0.9em; font-weight: 700; text-align: center; margin-bottom: .5em; }
+    .media-caption { font-size: 0.85em; color: #666; text-align: center; margin-top: .5em; }
+    a.yt { position: relative; display: block; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    a.yt img { width: 100%; display: block; aspect-ratio: 16 / 9; object-fit: cover; }
+    a.yt .play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+    a.yt .play span { background: rgba(0,0,0,.72); color: #fff; font: 600 15px 'Google Sans', sans-serif; padding: 10px 18px; border-radius: 999px; }
+    a.yt:hover .play span { background: #ff0033; }
+    .mono { font-family: ui-monospace, monospace; font-size: .95em; }
+    /* 3DGS viewer */
+    .viewer { position: relative; background: #000; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.15); height: min(70vh, 640px); min-height: 340px; touch-action: none; }
+    .viewer canvas { width: 100%; height: 100%; display: block; cursor: grab; outline: none; }
+    .viewer canvas:active { cursor: grabbing; }
+    .hud { position: absolute; left: 12px; top: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 8px; pointer-events: none; }
+    .hud button { pointer-events: auto; font: 600 14px 'Google Sans', sans-serif; color: #fff; background: rgba(20,28,25,.78); border: 1px solid rgba(255,255,255,.2); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+    .hud button[aria-pressed="true"] { background: #3e8ed0; border-color: #3e8ed0; }
+    .status { position: absolute; left: 12px; bottom: 12px; font-size: 13px; color: #e6ecea; background: rgba(20,28,25,.75); padding: 4px 10px; border-radius: 6px; pointer-events: none; }
+    .help { font-size: 0.85em; color: #666; text-align: center; margin-top: .75em; }
+    kbd { font: 12px ui-monospace, monospace; border: 1px solid #ccc; border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: #fff; }
+    .pipeline { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 10px; }
+    .pipeline img { width: 100%; height: auto; display: block; }
+  </style>
 </head>
 <body>
-<header>
-  <div class="wrap">
-    <h1>Al Quaraouiyine en 3D<span class="ar" lang="ar" dir="rtl">جامع القرويين، فاس</span></h1>
-  </div>
-</header>
 
-<main>
-<section id="videos">
-  <div class="wrap">
-    <div class="two">
-      <div class="media">
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">Al Quaraouiyine en 3D<span class="ar" lang="ar" dir="rtl">جامع القرويين، فاس</span></h1>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">Reconstruction 3D Gaussian Splatting de la cour, de nuit, à partir d'une vidéo 360° amateur</span>
+          </div>
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <span class="link-block">
+                <a href="https://www.youtube.com/watch?v=dIgoS4OYrYg" target="_blank" rel="noopener" class="button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fab fa-youtube"></i></span><span>Vidéo source</span></a>
+              </span>
+              <span class="link-block">
+                <a href="#modele" class="button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-cube"></i></span><span>Modèle 3D</span></a>
+              </span>
+              <span class="link-block">
+                <a href="#chaine" class="button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-diagram-project"></i></span><span>Chaîne de traitement</span></a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Videos -->
+<section class="section" id="videos" style="padding-top: 0;">
+  <div class="container is-max-desktop">
+    <div class="columns">
+      <div class="column">
+        <p class="media-title">Vidéo d'origine</p>
         <a class="yt" id="yt" href="https://www.youtube.com/watch?v=dIgoS4OYrYg" target="_blank" rel="noopener">
           <img src="media/thumb_dIgoS4OYrYg.jpg" alt="Image de la vidéo 360° de nuit de la cour">
           <span class="play"><span>▶ Lire la vidéo</span></span>
@@ -102,26 +99,26 @@ footer p { max-width: 80ch; margin: 0 0 6px; }
             f.title = "Vidéo d'origine sur YouTube (dIgoS4OYrYg)";
             f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen; gyroscope; accelerometer";
             f.allowFullscreen = true;
-            f.style.cssText = "width:100%;aspect-ratio:16/9;border:0;display:block;background:#000";
+            f.className = "yt-frame"; f.style.border = "0";
             a.replaceWith(f);
           });
         })();
         </script>
-        <p class="label">Vidéo d'origine</p>
-        <p class="caption">Vidéo 360° de nuit, chaîne bokbah, 2021 · <span class="mono">dIgoS4OYrYg</span></p>
+        <p class="media-caption">Vidéo 360° de nuit, chaîne bokbah, 2021 · <span class="mono">dIgoS4OYrYg</span></p>
       </div>
-      <div class="media">
-        <video src="media/nuit360_reconstruite.mp4" poster="media/nuit360_reconstruite_poster.jpg" controls muted loop playsinline preload="metadata"></video>
-        <p class="label">Notre reconstruction (vidéo)</p>
-        <p class="caption">Rendu du modèle 3DGS le long du trajet de la vidéo</p>
+      <div class="column">
+        <p class="media-title">Notre reconstruction (vidéo)</p>
+        <video class="scene-video" src="media/nuit360_reconstruite.mp4" poster="media/nuit360_reconstruite_poster.jpg" controls muted loop playsinline preload="metadata"></video>
+        <p class="media-caption">Rendu du modèle 3DGS le long du trajet de la vidéo</p>
       </div>
     </div>
   </div>
 </section>
 
-<section id="modele">
-  <div class="wrap">
-    <p class="label" style="margin:0 0 10px">Modèle 3DGS interactif</p>
+<!-- 3DGS viewer -->
+<section class="section" id="modele" style="background: #f5f5f5;">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Modèle 3DGS interactif</h2>
     <div class="viewer" id="viewer">
       <canvas id="gl" aria-label="Vue 3D interactive de la cour de nuit"></canvas>
       <div class="hud">
@@ -130,18 +127,34 @@ footer p { max-width: 80ch; margin: 0 0 6px; }
       </div>
       <div class="status" id="status" role="status">Chargement…</div>
     </div>
-    <p class="help">Glisser pour regarder · molette ou <kbd>↑</kbd><kbd>↓</kbd> pour avancer · <kbd>←</kbd><kbd>→</kbd> pour se décaler · deux doigts sur écran tactile.</p>
+    <p class="help">Glisser pour regarder · molette ou <kbd>↑</kbd><kbd>↓</kbd> pour avancer · <kbd>←</kbd><kbd>→</kbd> pour se décaler · deux doigts sur écran tactile</p>
   </div>
 </section>
-<section id="chaine">
-  <div class="wrap">
-    <p class="label" style="margin:0 0 10px">Chaîne de traitement</p>
-    <div class="media" style="background:#fff;padding:10px">
-      <img src="media/pipeline_360.svg" alt="Schéma de la chaîne de reconstruction : extraction de 201 panoramas, masques, poses COLMAP équirectangulaires, découpe en 12 vues perspective, masques par vue, 3D Gaussian Splatting, puis évaluation, vidéo reconstruite et viewer web" style="width:100%;height:auto;aspect-ratio:auto;object-fit:contain;background:#fff">
+
+<!-- Pipeline -->
+<section class="section" id="chaine">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Chaîne de traitement</h2>
+    <div class="pipeline">
+      <img src="media/pipeline_360.svg" alt="Schéma de la chaîne de reconstruction : extraction de 201 panoramas, masques, poses COLMAP équirectangulaires, découpe en 12 vues perspective, masques par vue, 3D Gaussian Splatting, puis évaluation, vidéo reconstruite et viewer web">
     </div>
   </div>
 </section>
-</main>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content has-text-centered">
+          <p>Vidéo source : <a href="https://www.youtube.com/watch?v=dIgoS4OYrYg">YouTube dIgoS4OYrYg</a>, propriété de son auteur, lue depuis YouTube.
+            Viewer 3DGS écrit pour cette page, sur le principe du viewer « splat » d'antimatter15.
+            Ce site reprend le template de <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
 
 <script>
 (() => {
